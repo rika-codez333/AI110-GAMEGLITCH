@@ -5,8 +5,17 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 ## 1. What was broken when you started?
 
 - What did the game look like the first time you ran it?
+
+    The hints were giving the wrong prompt (e.g. go higher or lower) on every number I guessed.
+
 - List at least two concrete bugs you noticed at the start  
   (for example: "the hints were backwards").
+    1. hints were wrong
+    2. the enter button does not input the number I guessed
+    3. difficulty levels had incorrect ranges
+    4. when secret number entered, score is wrong
+---
+
 
 **Bug Reproduction Log**
 
@@ -14,7 +23,7 @@ Document at least 3 bugs you found. Add rows as needed.
 
 | Input | Expected Behavior | Actual Behavior | Console Output / Error |
 |-------|-------------------|-----------------|------------------------|
-| | | | |
+|guess of 44 |"Go Higher" hint |"Go Lower" hint |None |
 | | | | |
 | | | | |
 
