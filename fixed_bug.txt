@@ -126,6 +126,33 @@ BUG 12:
 - File: logic_utils.py, update_score()
 
 BUG 13:
+[2026-06-21] Added pytest cases targeting Bug 1 and Bug 2 (tests/test_game_logic.py)
+- Added 7 new tests to tests/test_game_logic.py covering get_range_for_difficulty:
+    Bug 1 (4 tests): verify Normal returns (1, 50), Hard returns (1, 100), Easy unchanged,
+      and that Normal upper bound is strictly less than Hard upper bound.
+    Bug 2 (3 tests): verify Easy caps at 20 and Normal at 50 (not hardcoded 100), and that
+      all three difficulties produce distinct upper bounds.
+- All 7 tests pass against the fixed logic_utils.py.
+- File: tests/test_game_logic.py
+
+BUG 13:
+[2026-06-21] Added pytest cases targeting top-concern bugs (tests/test_game_logic.py)
+- Added 16 new tests covering the four highest-impact bugs, plus fixed 3 pre-existing broken tests:
+    Bug 3 (4 tests): verify Too High hint says "Go LOWER!", Too Low says "Go HIGHER!",
+      Win hint is correct, and that the two wrong-guess hints are never swapped.
+    Bug 4 (2 tests): verify check_guess raises TypeError on a string secret (coercion path gone),
+      and that integer comparison is not silently flipped on even-attempt-style values.
+    Bug 8 (4 tests): verify first-guess win scores 90 (not 80), second-guess 80, ninth-guess
+      floors at 10, and score never goes below 10 regardless of attempt count.
+    Bug 9 (3 tests): verify attempt_number=0 and negative values raise ValueError,
+      and that the error message includes the bad value.
+    Pre-existing tests (3 fixed): test_winning_guess, test_guess_too_high, test_guess_too_low
+      were comparing result == "Win"/"Too High"/"Too Low" against the (outcome, hint) tuple
+      returned by check_guess — updated to unpack the tuple first.
+- All 23 tests pass. update_score imported alongside check_guess and get_range_for_difficulty.
+- File: tests/test_game_logic.py
+
+BUG 13:
 [2026-06-21] Stale test caused TypeError after string-coercion bug was removed (test_ranges.py)
 - Problem: test_string_secret_fallback_too_high_returns_go_lower called check_guess(80, "50")
   to verify the old TypeError fallback branch in check_guess. That branch was removed as part
