@@ -150,6 +150,7 @@ BUG 13:
       were comparing result == "Win"/"Too High"/"Too Low" against the (outcome, hint) tuple
       returned by check_guess — updated to unpack the tuple first.
 - All 23 tests pass. update_score imported alongside check_guess and get_range_for_difficulty.
+- Terminal result: 23 passed in 0.04s (python3 -m pytest tests/test_game_logic.py -v)
 - File: tests/test_game_logic.py
 
 BUG 13:
