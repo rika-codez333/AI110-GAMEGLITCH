@@ -1,0 +1,157 @@
+FIXED BUGS LOG
+==============
+
+BUG 1:
+[2026-06-21] Incorrect difficulty ranges in get_range_for_difficulty (app.py)
+- Problem: Normal and Hard ranges were swapped.
+    Easy   -> (1, 20)   [correct]
+    Normal -> (1, 100)  [wrong, should be (1, 50)]
+    Hard   -> (1, 50)   [wrong, should be (1, 100)]
+- Fix: Set Normal to (1, 50) and Hard to (1, 100). Easy left unchanged.
+- File: app.py, get_range_for_difficulty()
+
+BUG 2:
+[2026-06-21] Hardcoded "1 and 100" range in player-facing text/logic (app.py)
+- Problem: Two spots ignored the selected difficulty range:
+    1. st.info() prompt said "between 1 and 100" regardless of difficulty.
+    2. New Game button reset secret with random.randint(1, 100).
+- Fix: Use the difficulty-derived low/high values in both spots.
+- File: app.py (st.info guess prompt; New Game handler)
+
+BUG 3:
+[2026-06-21] Reversed hint messages in check_guess (app.py)
+- Problem: Hint strings were paired with the wrong outcomes:
+    guess > secret -> "Too High" but said "📈 Go HIGHER!" (should go lower)
+    guess < secret -> "Too Low"  but said "📉 Go LOWER!"  (should go higher)
+  Affected both the numeric comparison and the TypeError string-fallback
+  branch (triggered on even attempts where secret is cast to a string).
+- Fix: Swap the hint strings so they match the outcome:
+    "Too High" -> "📉 Go LOWER!"
+    "Too Low"  -> "📈 Go HIGHER!"
+- File: app.py, check_guess()
+
+BUG 4: 
+[2026-06-21] Even-attempt secret type coercion causing reversed hints (app.py)
+- Problem: In the submit handler, secret was cast to a string on every even attempt:
+      if st.session_state.attempts % 2 == 0:
+          secret = str(st.session_state.secret)
+  This triggered the TypeError fallback branch inside check_guess, where Python
+  string comparison was used (e.g. "9" > "10" is True), silently reversing
+  the "Too High" / "Too Low" outcome on those attempts.
+- Fix: Removed the conditional type coercion entirely; check_guess now always
+  receives the integer secret directly (st.session_state.secret).
+- File: app.py, submit handler (lines previously ~158-163)
+
+BUG 5:
+[2026-06-21] attempts counter initialized to 1 instead of 0 (app.py)
+- Problem: st.session_state.attempts was initialized to 1 instead of 0.
+  The submit handler increments attempts before using it, so the very first
+  guess incremented to 2, meaning:
+    - "Attempts left" was off by one from the start of every game.
+    - attempt_number passed to update_score was one higher than intended,
+      reducing the win score by 10 points on every attempt.
+- Fix: Changed the initial value from 1 to 0 so attempts correctly reflects
+  how many guesses have been submitted.
+- File: app.py, session state initialization (attempts)
+
+BUG 6:
+[2026-06-21] New Game handler did not reset game status (app.py)
+- Problem: After a win or loss, st.session_state.status was "won" or "lost".
+  The New Game button reset attempts and secret but never reset status.
+  On rerun, the status check (if st.session_state.status != "playing") fired
+  immediately and called st.stop(), making the new game completely unplayable.
+- Fix: Added st.session_state.status = "playing" to the New Game handler
+  alongside the other resets.
+- File: app.py, New Game button handler
+
+BUG 7:
+[2026-06-21] Logic functions refactored from app.py into logic_utils.py
+- Problem: get_range_for_difficulty, parse_guess, check_guess, and update_score
+  were defined inline in app.py, mixing game logic with UI code.
+- Fix: Implemented all four functions in logic_utils.py and replaced their
+  definitions in app.py with a single import:
+      from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
+  check_guess was also simplified — the TypeError fallback branch was removed
+  since the type-coercion bug above was the only thing that could ever trigger it.
+- Files: logic_utils.py (functions added); app.py (definitions removed, import added)
+
+BUG 8:
+[2026-06-21] Score off-by-one in update_score (logic_utils.py)
+- Problem: app.py increments attempts before calling update_score, so
+  attempt_number arrived as 1-indexed (first guess = 1). The formula
+  100 - 10 * (attempt_number + 1) added another +1, double-counting one
+  attempt. A first-guess win awarded 80 points instead of the correct 90.
+- Fix: Removed the redundant +1 from the formula and collapsed the two-line
+  calculation into one: max(100 - 10 * attempt_number, 10).
+- File: logic_utils.py, update_score()
+
+BUG 9:
+[2026-06-21] Guard clause added for invalid attempt_number (logic_utils.py)
+- Problem: attempt_number=0 or negative would silently award inflated points
+  (e.g. attempt_number=0 → 100 points with no penalty) with no error raised.
+- Fix: Added a guard clause at the top of update_score that raises ValueError
+  if attempt_number < 1, with a message stating the received value.
+  Docstring updated to explicitly state that attempt_number is 1-indexed.
+- File: logic_utils.py, update_score()
+
+BUG 10:
+[2026-06-21] Invalid guesses consumed attempts (app.py)
+- Problem: st.session_state.attempts was incremented before parse_guess was called.
+  Submitting a non-numeric input (e.g. "abcde") counted as a used attempt,
+  reducing the player's remaining guesses without a valid guess being made.
+  Manually verified: typing gibberish and submitting dropped the attempt counter.
+- Fix: Moved attempts += 1 inside the else branch so only successfully parsed
+  guesses increment the counter.
+- File: app.py, submit handler
+
+BUG 11:
+[2026-06-21] Difficulty change mid-game did not regenerate secret (app.py)
+- Problem: The secret was generated once on first load and never updated when
+  difficulty changed. Switching from Easy (1–20) to Hard (1–100) mid-game kept
+  the original secret, which could fall outside the new range shown to the player.
+  Manually verified: switched Easy→Hard, debug panel showed secret remained 45.
+- Fix: Added st.session_state.difficulty tracking. On each rerun, if the stored
+  difficulty differs from the selected difficulty, the secret is regenerated within
+  the new range and attempts, status, and history are reset.
+- File: app.py, session state initialization
+
+BUG 12:
+[2026-06-21] Even-attempt Too High bonus verified correct (logic_utils.py)
+- Problem (investigation): Manual test appeared to show score going down (-5)
+  on a Too High guess when +5 was expected. Suspected logic bug in update_score.
+- Finding: The original logic (+ 5 if attempt_number % 2 == 0 else - 5) was correct.
+  The test was run on an odd-numbered attempt, which correctly deducts 5 pts.
+  A fix was briefly applied then reverted after confirming the original was right.
+  Re-verified on an even attempt: score correctly increased by 5.
+- File: logic_utils.py, update_score()
+
+BUG 13:
+[2026-06-21] Stale test caused TypeError after string-coercion bug was removed (test_ranges.py)
+- Problem: test_string_secret_fallback_too_high_returns_go_lower called check_guess(80, "50")
+  to verify the old TypeError fallback branch in check_guess. That branch was removed as part
+  of Bug 4 (string coercion removed from app.py). The refactored logic_utils.check_guess uses
+  a plain > comparison, which raises TypeError when secret is a str in Python 3.
+  Result: 1 of 8 tests crashed on every run.
+- Fix: Deleted the obsolete test. The string-fallback path no longer exists in the codebase
+  so the test has no valid target.
+- File: test_ranges.py, TestCheckGuessHints
+
+BUG 14:
+[2026-06-21] New Game button did not reset history (app.py)
+- Problem: The New Game handler reset attempts, status, and secret but never cleared
+  st.session_state.history. Guesses from the previous game persisted in the debug panel's
+  history list for the new game. The difficulty-change block (line 49-54) did reset history
+  correctly, making the inconsistency easy to miss.
+  Manually verified: made 3 guesses, clicked New Game, debug panel showed old guesses.
+- Fix: Added st.session_state.history = [] to the New Game handler alongside the other resets.
+- File: app.py, New Game button handler
+
+BUG 15:
+[2026-06-21] Hard difficulty attempt limit made game mathematically unwinnable (app.py)
+- Problem: Hard mode allowed only 5 attempts over a 1-100 range. Optimal binary search
+  requires a minimum of 7 guesses (ceil(log2(100)) = 7) to guarantee finding any number
+  in that range. A player using perfect strategy could still lose every time.
+  Manually verified: used all 7 attempts with binary search and did not reach the secret.
+- Fix: Raised the Hard attempt limit from 5 to 7, matching the binary search minimum.
+  Hard is still challenging — it requires near-perfect play — but is now winnable.
+- File: app.py, attempt_limit_map

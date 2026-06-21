@@ -1,0 +1,31 @@
+BUG REPORT: Reversed Hints in Guessing Game
+
+Description:
+The hint messages returned by the game logic are reversed. When a user's guess is too high, the game instructs them to "Go HIGHER!". When the guess is too low, it instructs them to "Go LOWER!".
+
+Location:
+File: app.py
+Function: check_guess
+
+Root Cause:
+In check_guess (app.py), the conditional checks return incorrect messages for the respective outcomes:
+1. When guess > secret, it returns the outcome "Too High" but incorrectly pairs it with the string "Go HIGHER!".
+2. When guess < secret, it returns the outcome "Too Low" but incorrectly pairs it with the string "Go LOWER!".
+
+Corresponding lines in app.py:
+- Lines 37-38:
+    if guess > secret:
+        return "Too High", "📈 Go HIGHER!"
+- Line 40:
+    else:
+        return "Too Low", "📉 Go LOWER!"
+- Lines 45-46 (in the exception handling block):
+    if g > secret:
+        return "Too High", "📈 Go HIGHER!"
+- Line 47:
+    return "Too Low", "📉 Go LOWER!"
+
+Recommended Fix:
+Swap the strings returned in both branches of the conditional logic so that:
+- "Too High" returns "📉 Go LOWER!"
+- "Too Low" returns "📈 Go HIGHER!"
