@@ -1,6 +1,5 @@
 import random
 import streamlit as st
-# FIX: refactored game functions into logic_utils.py for clean separation.
 from logic_utils import (
     get_range_for_difficulty, parse_guess, check_guess, update_score
 )
@@ -39,7 +38,7 @@ st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
 # ---------------------------------------------------------------------------
-# Session state initialization (runs only on the very first load)
+# Session state
 # ---------------------------------------------------------------------------
 
 if "secret" not in st.session_state:
@@ -48,7 +47,7 @@ if "secret" not in st.session_state:
 if "difficulty" not in st.session_state:
     st.session_state.difficulty = difficulty
 
-# FIX: switching difficulty regenerates the secret within the new range.
+# Reset the game when the selected difficulty changes.
 if st.session_state.difficulty != difficulty:
     st.session_state.difficulty = difficulty
     st.session_state.secret = random.randint(low, high)
@@ -57,7 +56,6 @@ if st.session_state.difficulty != difficulty:
     st.session_state.history = []
 
 if "attempts" not in st.session_state:
-    # FIX: was 1; off-by-one caused first submit to count as attempt 2.
     st.session_state.attempts = 0
 
 if "score" not in st.session_state:
@@ -70,7 +68,30 @@ if "history" not in st.session_state:
     st.session_state.history = []
 
 # ---------------------------------------------------------------------------
-# Debug panel (visible to developers)
+# Guess history sidebar
+# ---------------------------------------------------------------------------
+
+history = st.session_state.get("history", [])
+valid_guesses = [g for g in history if isinstance(g, int)]
+if valid_guesses:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📜 Guess History")
+    secret = st.session_state.get("secret", 0)
+    range_size = high - low or 1
+    for i, guess in enumerate(valid_guesses, start=1):
+        if guess == secret:
+            icon, result = "✅", "Correct!"
+        elif guess > secret:
+            icon, result = "⬇️", "Too High"
+        else:
+            icon, result = "⬆️", "Too Low"
+        closeness = 1.0 - min(abs(guess - secret) / range_size, 1.0)
+        temp = "🔥" if closeness >= 0.8 else ("♨️" if closeness >= 0.4 else "🧊")
+        st.sidebar.markdown(f"**#{i}** `{guess}` {icon} {result} {temp}")
+        st.sidebar.progress(closeness)
+
+# ---------------------------------------------------------------------------
+# Debug panel
 # ---------------------------------------------------------------------------
 
 with st.expander("Developer Debug Info"):
@@ -81,20 +102,19 @@ with st.expander("Developer Debug Info"):
     st.write("History:", st.session_state.history)
 
 # ---------------------------------------------------------------------------
-# Main game UI: guess input and action buttons
+# Main game area
 # ---------------------------------------------------------------------------
 
 st.subheader("Make a guess")
 
 attempts_left = attempt_limit - st.session_state.attempts
 
-# FIX: replaced hardcoded "1 and 100" with dynamic low/high from difficulty.
 st.info(
     f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempts_left}"
 )
 
-raw_guess = st.text_input(
+guess_text = st.text_input(
     "Enter your guess:",
     key=f"guess_input_{difficulty}"
 )
@@ -111,22 +131,18 @@ with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
 # ---------------------------------------------------------------------------
-# New Game: reset all state and restart
+# New game
 # ---------------------------------------------------------------------------
 
 if new_game:
     st.session_state.attempts = 0
-    # FIX: added missing status reset; without it st.stop() blocked new games.
     st.session_state.status = "playing"
-    # FIX: randint now uses difficulty range instead of hardcoded (1, 100).
     st.session_state.secret = random.randint(low, high)
     st.session_state.history = []
     st.success("New game started.")
     st.rerun()
 
-# ---------------------------------------------------------------------------
-# Guard: block input if the game is already over
-# ---------------------------------------------------------------------------
+# Stop here if the round has already ended.
 
 if st.session_state.status != "playing":
     if st.session_state.status == "won":
@@ -135,28 +151,36 @@ if st.session_state.status != "playing":
         st.error("Game over. Start a new game to try again.")
     st.stop()
 
-# ---------------------------------------------------------------------------
-# Submit: process the player's guess
-# ---------------------------------------------------------------------------
+# Handle a submitted guess.
 
 if submit:
-    success, guess_int, error_message = parse_guess(raw_guess)
+    success, guess_int, error_message = parse_guess(guess_text)
 
     if not success:
-        st.session_state.history.append(raw_guess)
+        st.session_state.history.append(guess_text)
         st.error(error_message)
 
     else:
-        # FIX: only valid guesses consume attempts.
         st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
 
-        # FIX: removed str(secret) coercion that silently flipped hints via
-        # lexicographic comparison on every even-numbered attempt.
         outcome, hint_message = check_guess(guess_int, st.session_state.secret)
 
         if show_hint:
             st.warning(hint_message)
+            if outcome != "Win":
+                distance = abs(guess_int - st.session_state.secret)
+                range_size = high - low or 1
+                closeness = 1.0 - min(distance / range_size, 1.0)
+                if closeness >= 0.8:
+                    proximity_msg = "🔥 Very close!"
+                elif closeness >= 0.5:
+                    proximity_msg = "♨️ Getting warm!"
+                elif closeness >= 0.3:
+                    proximity_msg = "🌡️ Lukewarm..."
+                else:
+                    proximity_msg = "🧊 Way off!"
+                st.caption(proximity_msg)
 
         st.session_state.score = update_score(
             current_score=st.session_state.score,
@@ -181,7 +205,7 @@ if submit:
                     f"Score: {st.session_state.score}"
                 )
 
-# ---------------------------------------------------------------------------
+        st.rerun()
 
 st.divider()
-st.caption("Built by an AI that claims this code is production-ready.")
+st.caption("Built with Streamlit and a little help from AI.")

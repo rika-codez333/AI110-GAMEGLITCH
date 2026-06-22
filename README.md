@@ -1,70 +1,64 @@
 # 🎮 Game Glitch Investigator: The Impossible Guesser
 
-## 🚨 The Situation
+## Overview
 
-You asked an AI to build a simple "Number Guessing Game" using Streamlit.
-It wrote the code, ran away, and now the game is unplayable. 
+This is a Streamlit number guessing game. The player chooses a difficulty, types guesses, and gets hints about whether the secret number is higher or lower. The app also tracks attempts, score, and guess history so you can see how each round is going.
 
-- You can't win.
-- The hints lie to you.
-- The secret number seems to have commitment issues.
-
-## 🛠️ Setup
+## Setup
 
 1. Install dependencies: `pip install -r requirements.txt`
-2. Run the broken app: `python -m streamlit run app.py`
+2. Run the app: `python -m streamlit run app.py`
 
-## 🕵️‍♂️ Your Mission
+## How To Play
 
-1. **Play the game.** Open the "Developer Debug Info" tab in the app to see the secret number. Try to win.
-2. **Find the State Bug.** Why does the secret number change every time you click "Submit"? Ask ChatGPT: *"How do I keep a variable from resetting in Streamlit when I click a button?"*
-3. **Fix the Logic.** The hints ("Higher/Lower") are wrong. Fix them.
-4. **Refactor & Test.** - Move the logic into `logic_utils.py`.
-   - Run `pytest` in your terminal.
-   - Keep fixing until all tests pass!
+1. Open the app in your browser.
+2. Choose a difficulty from the sidebar.
+3. Type a guess and click **Submit Guess**.
+4. Use the hint to adjust your next guess.
+5. Click **New Game** if you want to start a fresh round.
 
-## 📝 Document Your Experience
+## What To Look For
 
-- [x] Describe the game's purpose.
-- [x] Detail which bugs you found.
-- [x] Explain what fixes you applied.
+- The sidebar shows the selected difficulty, number range, and allowed attempts.
+- The main panel shows how many attempts are left.
+- The guess history panel shows previous valid guesses.
+- The debug panel shows the secret number, score, attempts, difficulty, and history.
 
-## 📸 Demo Walkthrough
+## Demo Walkthrough
 
-Describe your fixed game in numbered steps so a reader can follow along without watching a video:
+1. **Open the app** — launch `streamlit run app.py` and the game page opens in your browser.
 
-1. **Open the app** — launch `streamlit run app.py` and the "Glitchy Guesser" page loads in your browser.
+2. **Pick a difficulty** — use the sidebar to choose Easy, Normal, or Hard. Each option changes the range and the number of allowed attempts.
 
-2. **Choose a difficulty** in the left sidebar: Easy (1–20, 6 attempts), Normal (1–50, 8 attempts), or Hard (1–100, 7 attempts). The range and attempt count update instantly.
+3. **Read the range** — the message at the top tells you the correct number range for the selected difficulty.
 
-3. **Read the prompt** — the info box at the top shows the correct range for your chosen difficulty (e.g. "Guess a number between 1 and 50"), not a hardcoded "1 and 100."
+4. **Enter a guess** — type a number and click **Submit Guess**. Invalid text shows an error and does not count as a valid guess.
 
-4. **Type a number** in the text input and click **Submit Guess**. Only valid integers count — typing gibberish shows an error but does *not* use up an attempt.
+5. **Read the hint** — if hints are turned on, you will see **Go LOWER!** or **Go HIGHER!** after each wrong guess.
 
-5. **Read the hint** — if "Show hint" is checked, you'll see either "📉 Go LOWER!" or "📈 Go HIGHER!" The hints now point in the correct direction (they were reversed in the original).
+6. **Watch your progress** — the game updates your attempts, score, and guess history as you play.
 
-6. **Watch your score and attempts** — the attempt counter starts at 0 and increments by 1 per valid guess. A first-guess win awards 90 points; each additional guess costs 10, with a floor of 10. "Too High" guesses on even attempts add a small bonus; odd attempts deduct a small penalty.
+7. **Win or lose** — guessing the secret number shows a win message and balloons. Running out of attempts ends the round and reveals the secret.
 
-7. **Win or lose** — guess the secret number to trigger balloons and see your final score. Run out of attempts and the secret is revealed with a game-over message.
+8. **Start again** — click **New Game** to reset the round with a new secret number from the same difficulty range.
 
-8. **Start a New Game** — click **New Game** to reset the secret, attempts, score history, and game status. The new secret is drawn from the currently selected difficulty range.
+9. **Change difficulty anytime** — switching difficulty resets the round so the new secret always matches the new range.
 
-9. **Switch difficulty mid-game** — changing difficulty immediately regenerates a secret within the new range and resets all state, so the number is always valid for the range shown.
-
-10. **Check the debug panel** *(optional)* — expand "Developer Debug Info" to see the secret number, attempt count, score, and full guess history at any point.
+10. **Check the debug panel** *(optional)* — expand "Developer Debug Info" to see the game state while testing.
 
 **Screenshot** *(optional)*: ![fixed gameplay](fixed gameplay.png)
 
-## 🧪 Test Results
+## Test Results
 
 ```
 $ python3 -m pytest tests/test_game_logic.py
-============================== 30 passed in 0.05s ==============================
+============================== 23 passed in 0.03s ==============================
 ```
 
-## 🚀 Stretch Features
+## Stretch Features
 
-- [x] **SF7 — Test Generation:** Used Claude to suggest edge-case tests for `update_score` (zero/negative `attempt_number` → `ValueError`) and `check_guess` (string secret → `TypeError`). Tests documented in `ai_interactions.md`.
-- [x] **SF8 — Agent Workflow:** Asked Claude Sonnet 4.6 to investigate the broken game end-to-end: read both files, identify all bugs, apply fixes, and write 23 pytest tests. One misdiagnosis (hint bug blamed on the counter instead of the `str()` coercion) caught and corrected manually. Documented in `ai_interactions.md`.
-- [x] **SF9 — Linting & Style:** Ran `flake8` on `app.py` and `logic_utils.py`; fixed all 29 warnings (E262/E265 comment format, E501 line length, W291 trailing whitespace). Zero warnings remain; all 23 tests still pass. Documented in `ai_interactions.md`.
-- [x] **SF11 — Model Comparison:** Ran Claude Haiku 4.5 and Claude Sonnet 4.6 on the same task (explain the `str()` coercion bug and suggest a Pythonic fix). Both correct; Sonnet caught an additional failure mode (`42 == "42"` is `False`, so players could never win on even attempts). Documented in `ai_interactions.md`.
+- [x] **Challenge 4 — Enhanced Game UI:** Added hot/cold messages, a guess history sidebar, and faster debug updates in `app.py`.
+- [x] **SF7 — Test Generation:** Used Claude to suggest edge-case tests for `update_score` and `check_guess`. Tests documented in `ai_interactions.md`.
+- [x] **SF8 — Agent Workflow:** Asked Claude Sonnet 4.6 to investigate the game, fix the bugs, and write pytest tests. Documented in `ai_interactions.md`.
+- [x] **SF9 — Linting & Style:** Ran `flake8` on `app.py` and `logic_utils.py` and fixed the warnings. Documented in `ai_interactions.md`.
+- [x] **Challenge 5 / SF11 — Model Comparison:** Compared Claude Haiku 4.5 and Claude Sonnet 4.6 on the same bug-fixing task. Documented in `ai_interactions.md`.

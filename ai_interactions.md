@@ -1,28 +1,58 @@
 # AI Interactions Log
 
-> **Stretch features only.** Only fill in the sections that apply to stretch features you attempted. If you did not attempt a stretch feature, leave its section blank or delete it. This file is not required for the core project.
+> This file records the stretch features and AI-assisted work used on the project.
 
 ---
 
-## Agent Workflow (SF8)
+## Agent Workflow (SF8) — Bug Fixes
 
 > Document your experience using an AI agent (e.g., Cursor Agent, Claude, Copilot) to make multi-step changes autonomously.
 
 **What task did you give the agent?**
 
-I asked Claude Sonnet 4.6 to investigate the broken number-guessing game, identify all bugs in `app.py` and `logic_utils.py`, fix them, and write pytest tests to verify each fix.
+I asked Claude Sonnet 4.6 to inspect the number-guessing game, find the bugs in `app.py` and `logic_utils.py`, fix them, and write pytest tests for the changes.
 
 **What did the agent do?**
 
-1. Read `app.py` and `logic_utils.py` to map the full codebase structure.
-2. Identified four bugs: swapped difficulty ranges (Bug 1), hardcoded range values (Bug 2), reversed hint messages in `check_guess` (Bug 3), `str()` coercion of the secret on even attempts (Bug 4), an off-by-one in `update_score` (Bug 8), and missing input validation on `attempt_number` (Bug 9).
-3. Edited `logic_utils.py` to fix the range swap, hint logic, score formula, and add a `ValueError` guard.
-4. Edited `app.py` to remove the `str()` coercion and fix the hardcoded range.
-5. Wrote `tests/test_game_logic.py` with 23 named tests covering all fixed bugs, then ran `pytest` to confirm all passed.
+1. Read `app.py` and `logic_utils.py` to understand how the game worked.
+2. Found the broken range logic, reversed hints, string coercion bug, scoring off-by-one, and missing input validation.
+3. Updated `logic_utils.py` to fix the pure game logic.
+4. Updated `app.py` to use the correct range and keep the secret as an integer.
+5. Wrote `tests/test_game_logic.py` with 23 tests and confirmed they all passed.
 
 **What did you have to verify or fix manually?**
 
-The agent initially diagnosed the reversed hints as being caused by the attempt counter logic rather than the `str()` coercion. I had to read `app.py` myself, find the `if st.session_state.attempts % 2 == 0: secret = str(...)` line, and redirect the agent to the real root cause. I also manually ran the Streamlit app after each fix to confirm the UI behavior matched the test results — for example, verifying that a guess I knew was too high now correctly said "Go LOWER!" before marking the bug closed.
+The agent first blamed the attempt counter for the hint bug. I checked `app.py`, found the `str()` coercion, and corrected that diagnosis. I also ran the app myself after each fix to make sure the UI matched the tests.
+
+---
+
+## Agent Workflow (Challenge 2) — Guess History Sidebar
+
+> Document the agent workflow for implementing the new Guess History feature.
+
+**What task did you give the agent?**
+
+I asked Claude Sonnet 4.6 to plan and implement a Guess History sidebar that visualizes how close each previous guess was to the secret number, using the existing `st.session_state.history` list that was already being populated but only shown in the developer debug panel.
+
+**Files modified:**
+- `app.py` — added the Guess History sidebar
+
+**What did the agent do?**
+
+1. Read `app.py` to see how session state and history were already used.
+2. Filtered the history so only valid numeric guesses appear in the sidebar.
+3. Added a closeness score so the progress bar grows as guesses get closer to the secret.
+4. Added hot/cold emoji labels to make the guess history easier to scan.
+5. Used `st.session_state.get()` so the sidebar works on the first page load.
+
+**What did you have to verify or fix manually?**
+
+pytest cannot fully test Streamlit UI behavior, so I confirmed the sidebar by running the app and checking it directly. I manually verified:
+
+- **History appears after a valid guess** — the live app shows the new guess in the sidebar after submit.
+- **Invalid inputs are excluded** — typing gibberish does not add a numeric entry.
+- **Hot/cold tiers feel correct** — the emoji labels match the distance from the secret.
+- **New Game and difficulty switch clear the panel** — the sidebar resets when the game resets.
 
 ---
 
@@ -41,6 +71,43 @@ The agent initially diagnosed the reversed hints as being caused by the attempt 
 
 ---
 
+## Professional Documentation and Linting (Challenge 3)
+
+> Document how you used AI to add docstrings and review code style.
+
+**Prompt used:**
+
+```
+Rewrite the docstrings in logic_utils.py using Google style with Args:,
+Returns:, and Raises: sections. Keep the language plain and readable for
+a beginner.
+```
+
+**Changes applied:**
+
+- All four functions now have structured docstrings with `Args:` and `Returns:` sections.
+- `get_range_for_difficulty` explains the available ranges and the fallback case.
+- `parse_guess` explains how text input becomes an integer.
+- `check_guess` explains how the game compares a guess with the secret.
+- `update_score` explains the scoring rules and invalid attempt numbers.
+
+**Linting output after:**
+
+```
+$ python3 -m flake8 logic_utils.py app.py
+(no output — zero warnings)
+```
+
+**Verification:**
+
+```
+$ python3 -c "from logic_utils import update_score; help(update_score)"
+```
+
+Confirmed the structured docstrings render correctly in the terminal help output.
+
+---
+
 ## Linting & Style (SF9)
 
 > Document your use of AI for linting or code style improvements.
@@ -49,8 +116,7 @@ The agent initially diagnosed the reversed hints as being caused by the attempt 
 
 ```
 Run flake8 on app.py and logic_utils.py, then fix all warnings while keeping
-the code readable. Move long inline comments above the line they describe
-instead of shortening them to meaninglessness.
+the code readable.
 ```
 
 **Linting output before:**
@@ -90,30 +156,28 @@ logic_utils.py:79:85: E262 inline comment should start with '# '
 
 **Changes applied:**
 
-- **E262 / E265** — All `#FIX:` comments (no space after `#`) were changed to `# FIX:`. This applied to every fix annotation in both files.
-- **E501 (long inline comments)** — Moved long trailing comments off the end of code lines and onto a standalone `# FIX:` line directly above. This kept the explanation intact without shrinking it to one word.
-- **E501 (long import)** — Wrapped the multi-name `from logic_utils import ...` into parentheses across two lines.
-- **W291 (trailing whitespace)** — Removed the trailing space after the comment on `logic_utils.py:8`.
-- **Refactor in `update_score`** — Extracted `bonus = attempt_number % 2 == 0` into its own variable so the conditional return fit within 79 characters without becoming cryptic.
-- After all changes: `flake8 app.py logic_utils.py` reports zero warnings. All 23 pytest tests still pass.
+- Wrapped the long import in `app.py`.
+- Removed trailing whitespace and cleaned comment formatting.
+- Kept the code readable while satisfying flake8.
+- After the changes, `flake8 app.py logic_utils.py` reports zero warnings and all tests still pass.
 
 ---
 
-## Model Comparison (SF11)
+## Model Comparison (Challenge 5 / SF11)
 
 > Compare two AI models on the same task.
 
 **Task given to both models:**
 
-Explain why casting `secret` to a string on every even-numbered attempt caused `check_guess` to return wrong hints, and describe the most Pythonic fix. (3–5 sentences on the bug, 1–2 sentences on the fix.)
+Explain why casting `secret` to a string on every even-numbered attempt caused `check_guess` to return wrong hints, and describe the most Pythonic fix.
 
 | | Model A | Model B |
 |-|---------|---------|
 | **Model name** | Claude Haiku 4.5 | Claude Sonnet 4.6 |
-| **Response summary** | Identified lexicographic string comparison as the root cause. Example: `"9" > "10"` is `True` because `"9" > "1"` alphabetically, so multi-digit secrets get wrong hints. Fix: remove the conditional cast and always store `secret` as an int. | Identified both the `TypeError` (int vs str comparison raises in Python 3) and the lexicographic fallback as failure modes. Also noted that `42 == "42"` is `False`, so players could never win on even attempts. Same fix: remove the cast entirely. |
+| **Response summary** | Identified string comparison as the root cause. Example: `"9" > "10"` is `True`, so multi-digit secrets get wrong hints. Fix: remove the cast and keep `secret` as an int. | Identified both the comparison error and the fact that `42 == "42"` is `False`, so players could never win on even attempts. Same fix: remove the cast entirely. |
 | **More Pythonic?** | Both suggested the same idiomatic fix (no branching, keep `secret` as int). Tied. | Both suggested the same idiomatic fix (no branching, keep `secret` as int). Tied. |
 | **Clearer explanation?** | Clear and concise — one good example, easy to follow. | More thorough — caught an extra failure mode (the `==` check always failing) that Haiku missed. |
 
 **Which did you prefer and why?**
 
-Sonnet for correctness: it caught that `42 == "42"` is `False` in Python 3, meaning a player could never win on an even-numbered attempt — not just get wrong hints. That's a more complete picture of the bug's impact. Haiku's response was easier to read at a glance, but the missing detail would leave a false impression that the only problem was reversed hints.
+Sonnet was the better answer because it caught that `42 == "42"` is `False` in Python 3. That meant the bug affected both hints and winning, not just the direction message.

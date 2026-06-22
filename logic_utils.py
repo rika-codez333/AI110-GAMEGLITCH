@@ -1,34 +1,39 @@
 def get_range_for_difficulty(difficulty: str):
-    """Return (low, high) inclusive range for the given difficulty."""
+    """Return the number range for a difficulty level.
+
+    Args:
+        difficulty: The selected difficulty name.
+
+    Returns:
+        A tuple of ``(low, high)`` numbers for the game range.
+    """
 
     if difficulty == "Easy":
         return 1, 20
 
     if difficulty == "Normal":
-        # FIX: was (1, 100) — Normal and Hard ranges were swapped.
         return 1, 50
 
     if difficulty == "Hard":
-        # FIX: was (1, 50) — corrected Hard to the wider range.
         return 1, 100
 
     return 1, 100
 
 
 def parse_guess(raw: str):
-    """
-    Parse the player's raw text input into an integer guess.
+    """Convert a typed guess into an integer when possible.
 
-    Returns a tuple of (success, parsed_integer, error_message).
-    On success: (True,  integer_value, None)
-    On failure: (False, None,          error string)
+    Args:
+        raw: The text entered by the player.
+
+    Returns:
+        A tuple of ``(success, value, error)``.
     """
 
     if raw is None or raw == "":
         return False, None, "Enter a guess."
 
     try:
-        # Accept decimal input like "7.0" by rounding toward zero.
         if "." in raw:
             parsed_value = int(float(raw))
         else:
@@ -41,45 +46,48 @@ def parse_guess(raw: str):
 
 
 def check_guess(guess, secret):
-    """
-    Compare the player's guess to the secret number.
+    """Compare a guess with the secret number.
 
-    Returns (outcome, hint_message) where outcome is one of:
-        "Win"      -- guess matches secret
-        "Too High" -- guess is above secret
-        "Too Low"  -- guess is below secret
+    Args:
+        guess: The player's guess.
+        secret: The number the player is trying to find.
+
+    Returns:
+        A tuple of ``(outcome, hint)``.
     """
 
     if guess == secret:
         return "Win", "🎉 Correct!"
 
     if guess > secret:
-        # FIX: was "Go HIGHER!" — reversed hint when guess was too high.
         return "Too High", "📉 Go LOWER!"
 
-    # FIX: was "Go LOWER!" — reversed hint when guess was too low.
     return "Too Low", "📈 Go HIGHER!"
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
-    """
-    Calculate the new score after a guess.
+    """Return the updated score after one guess.
 
-    attempt_number is 1-indexed (first guess = 1, second = 2, ...).
-    Win scoring:   start at 100 points, subtract 10 per attempt already used.
-                   Minimum win award is always 10 points.
-    Wrong guesses: Too High on an even attempt awards 5 pts (direction bonus).
-                   All other wrong guesses deduct 5 pts.
+    Scoring rules:
+      - A correct guess awards 100 points minus 10 for each attempt used.
+      - A "Too High" guess on an even-numbered attempt earns 5 points.
+      - Any other wrong guess deducts 5 points.
+
+    Args:
+        current_score: The score before this guess.
+        outcome: The result of the guess.
+        attempt_number: The number of the current valid guess.
+
+    Returns:
+        The updated score.
     """
 
     if attempt_number < 1:
-        # FIX: guard added; 0 or negative silently awarded inflated points.
         raise ValueError(
             f"attempt_number must be >= 1, got {attempt_number}"
         )
 
     if outcome == "Win":
-        # FIX: removed +1 off-by-one; first-guess win was scoring 80 not 90.
         points_awarded = max(100 - 10 * attempt_number, 10)
         return current_score + points_awarded
 
