@@ -1,5 +1,5 @@
 import pytest
-from logic_utils import check_guess, get_range_for_difficulty, update_score
+from logic_utils import check_guess, get_range_for_difficulty, parse_guess, update_score
 
 # --- Bug 1: Normal and Hard difficulty ranges were swapped ---
 
@@ -139,3 +139,57 @@ def test_guess_too_high():
 def test_guess_too_low():
     outcome, _ = check_guess(40, 50)
     assert outcome == "Too Low"
+
+# --- Challenge 1: Advanced Edge-Case Testing ---
+
+# Edge Case A: Negative numbers
+# A negative integer is a valid parse but always below any in-range secret;
+# verifies no crash and that check_guess returns a sensible hint.
+
+def test_c1_negative_number_parses_successfully():
+    success, value, error = parse_guess("-5")
+    assert success is True
+    assert value == -5
+    assert error is None
+
+def test_c1_negative_guess_returns_too_low():
+    outcome, hint = check_guess(-5, 10)
+    assert outcome == "Too Low"
+    assert hint == "📈 Go HIGHER!"
+
+# Edge Case B: Decimal input
+# Players on mobile or with autocorrect may type decimals; confirms
+# truncation toward zero is consistent across positive and negative decimals.
+
+def test_c1_decimal_truncates_toward_zero():
+    success, value, error = parse_guess("7.5")
+    assert success is True
+    assert value == 7
+    assert error is None
+
+def test_c1_whole_decimal_parses_cleanly():
+    success, value, error = parse_guess("7.0")
+    assert success is True
+    assert value == 7
+    assert error is None
+
+def test_c1_negative_decimal_truncates_toward_zero():
+    success, value, error = parse_guess("-3.9")
+    assert success is True
+    assert value == -3
+    assert error is None
+
+# Edge Case C: Extremely large values
+# Ensures no overflow, crash, or unexpected behavior when a player types
+# a number far outside the difficulty range.
+
+def test_c1_large_number_parses_successfully():
+    success, value, error = parse_guess("999999")
+    assert success is True
+    assert value == 999999
+    assert error is None
+
+def test_c1_large_guess_returns_too_high():
+    outcome, hint = check_guess(999999, 50)
+    assert outcome == "Too High"
+    assert hint == "📉 Go LOWER!"

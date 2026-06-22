@@ -59,7 +59,7 @@ Describe your fixed game in numbered steps so a reader can follow along without 
 
 ```
 $ python3 -m pytest tests/test_game_logic.py
-============================== 23 passed in 0.03s ==============================
+============================== 30 passed in 0.05s ==============================
 ```
 
 ## 🚀 Stretch Features

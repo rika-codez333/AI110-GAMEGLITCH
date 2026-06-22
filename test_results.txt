@@ -1,3 +1,5 @@
+# Before Challenge 1 (23 tests)
+
 ============================= test session starts ==============================
 platform darwin -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
 cachedir: .pytest_cache
@@ -30,3 +32,46 @@ tests/test_game_logic.py::test_guess_too_high PASSED                     [ 95%]
 tests/test_game_logic.py::test_guess_too_low PASSED                      [100%]
 
 ============================== 23 passed in 0.03s ==============================
+
+
+# After Challenge 1 — added 7 edge-case tests (30 tests)
+
+============================= test session starts ==============================
+platform darwin -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/rikaraxkz/Desktop/CodePath/AI110/AI110-GAMEGLITCH
+plugins: anyio-4.13.0
+collecting ... collected 30 items
+
+tests/test_game_logic.py::test_bug1_normal_range_is_1_to_50 PASSED       [  3%]
+tests/test_game_logic.py::test_bug1_hard_range_is_1_to_100 PASSED        [  6%]
+tests/test_game_logic.py::test_bug1_easy_range_unchanged PASSED          [ 10%]
+tests/test_game_logic.py::test_bug1_normal_and_hard_ranges_are_not_equal PASSED [ 13%]
+tests/test_game_logic.py::test_bug2_easy_upper_bound_is_not_hardcoded_100 PASSED [ 16%]
+tests/test_game_logic.py::test_bug2_normal_upper_bound_is_not_hardcoded_100 PASSED [ 20%]
+tests/test_game_logic.py::test_bug2_each_difficulty_produces_distinct_upper_bound PASSED [ 23%]
+tests/test_game_logic.py::test_bug3_too_high_hint_says_go_lower PASSED   [ 26%]
+tests/test_game_logic.py::test_bug3_too_low_hint_says_go_higher PASSED   [ 30%]
+tests/test_game_logic.py::test_bug3_win_hint_is_correct PASSED           [ 33%]
+tests/test_game_logic.py::test_bug3_hints_are_not_swapped PASSED         [ 36%]
+tests/test_game_logic.py::test_bug4_string_secret_raises_type_error PASSED [ 40%]
+tests/test_game_logic.py::test_bug4_integer_comparison_not_swapped_on_even_like_inputs PASSED [ 43%]
+tests/test_game_logic.py::test_bug8_first_guess_win_scores_90 PASSED     [ 46%]
+tests/test_game_logic.py::test_bug8_second_guess_win_scores_80 PASSED    [ 50%]
+tests/test_game_logic.py::test_bug8_ninth_guess_win_scores_minimum_10 PASSED [ 53%]
+tests/test_game_logic.py::test_bug8_win_score_does_not_go_below_10 PASSED [ 56%]
+tests/test_game_logic.py::test_bug9_zero_attempt_raises_value_error PASSED [ 60%]
+tests/test_game_logic.py::test_bug9_negative_attempt_raises_value_error PASSED [ 63%]
+tests/test_game_logic.py::test_bug9_error_message_includes_bad_value PASSED [ 66%]
+tests/test_game_logic.py::test_winning_guess PASSED                      [ 70%]
+tests/test_game_logic.py::test_guess_too_high PASSED                      [ 73%]
+tests/test_game_logic.py::test_guess_too_low PASSED                      [ 76%]
+tests/test_game_logic.py::test_c1_negative_number_parses_successfully PASSED [ 80%]
+tests/test_game_logic.py::test_c1_negative_guess_returns_too_low PASSED  [ 83%]
+tests/test_game_logic.py::test_c1_decimal_truncates_toward_zero PASSED   [ 86%]
+tests/test_game_logic.py::test_c1_whole_decimal_parses_cleanly PASSED    [ 90%]
+tests/test_game_logic.py::test_c1_negative_decimal_truncates_toward_zero PASSED [ 93%]
+tests/test_game_logic.py::test_c1_large_number_parses_successfully PASSED [ 96%]
+tests/test_game_logic.py::test_c1_large_guess_returns_too_high PASSED    [100%]
+
+============================== 30 passed in 0.05s ==============================
