@@ -1,0 +1,39 @@
+flowchart TD
+    Player -->|types guess| UI
+
+    subgraph UI ["app.py — Streamlit UI"]
+        Sidebar["Sidebar\n(difficulty, range, attempts)"]
+        Input["Text Input\n(raw guess)"]
+        Buttons["Buttons\n(Submit / New Game)"]
+        Display["Display\n(hint, score, status)"]
+        Debug["Debug Panel\n(secret, history)"]
+    end
+
+    subgraph State ["st.session_state"]
+        secret
+        attempts
+        score
+        status
+        history
+        difficulty
+    end
+
+    subgraph Logic ["logic_utils.py — Pure Game Logic"]
+        get_range["get_range_for_difficulty(difficulty)\nReturns (low, high)"]
+        parse["parse_guess(raw)\nReturns (success, int, error)"]
+        check["check_guess(guess, secret)\nReturns (outcome, hint)"]
+        update["update_score(score, outcome, attempt)\nReturns new score"]
+    end
+
+    Sidebar -->|difficulty| get_range
+    get_range -->|low, high| Sidebar
+    get_range -->|low, high| Input
+
+    Buttons -->|Submit| parse
+    parse -->|valid int| check
+    check -->|outcome, hint| Display
+    check -->|outcome| update
+    update -->|new score| State
+
+    Buttons -->|New Game| State
+    State -->|persists across reruns| UI

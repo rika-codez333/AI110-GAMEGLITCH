@@ -1,7 +1,9 @@
 import random
 import streamlit as st
-#FIX: identified inline logic mixed with UI; refactored all game functions into logic_utils.py.
-from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
+# FIX: refactored game functions into logic_utils.py for clean separation.
+from logic_utils import (
+    get_range_for_difficulty, parse_guess, check_guess, update_score
+)
 
 # ---------------------------------------------------------------------------
 # Page configuration
@@ -46,7 +48,8 @@ if "secret" not in st.session_state:
 if "difficulty" not in st.session_state:
     st.session_state.difficulty = difficulty
 
-if st.session_state.difficulty != difficulty:  #FIX: I caught difficulty change not regenerating secret; switching Easy→Hard kept old secret outside new range.
+# FIX: switching difficulty regenerates the secret within the new range.
+if st.session_state.difficulty != difficulty:
     st.session_state.difficulty = difficulty
     st.session_state.secret = random.randint(low, high)
     st.session_state.attempts = 0
@@ -54,7 +57,8 @@ if st.session_state.difficulty != difficulty:  #FIX: I caught difficulty change 
     st.session_state.history = []
 
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 0  #FIX: AI caught off-by-one: was 1, causing first submit to count as attempt 2.
+    # FIX: was 1; off-by-one caused first submit to count as attempt 2.
+    st.session_state.attempts = 0
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -84,7 +88,7 @@ st.subheader("Make a guess")
 
 attempts_left = attempt_limit - st.session_state.attempts
 
-#FIX: I spotted hardcoded "1 and 100" ignoring difficulty; replaced with dynamic low/high -- corrected using Claude code.
+# FIX: replaced hardcoded "1 and 100" with dynamic low/high from difficulty.
 st.info(
     f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempts_left}"
@@ -112,8 +116,10 @@ with col3:
 
 if new_game:
     st.session_state.attempts = 0
-    st.session_state.status = "playing"  #FIX: I added missing reset; without it st.stop() blocked every new game using Claude code.
-    st.session_state.secret = random.randint(low, high)  #FIX: AI fixed hardcoded randint(1, 100); now respects selected difficulty.
+    # FIX: added missing status reset; without it st.stop() blocked new games.
+    st.session_state.status = "playing"
+    # FIX: randint now uses difficulty range instead of hardcoded (1, 100).
+    st.session_state.secret = random.randint(low, high)
     st.session_state.history = []
     st.success("New game started.")
     st.rerun()
@@ -141,10 +147,12 @@ if submit:
         st.error(error_message)
 
     else:
-        st.session_state.attempts += 1  #FIX: I caught invalid guesses consuming attempts; moved increment inside valid-parse branch so only real guesses count.
+        # FIX: only valid guesses consume attempts.
+        st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
 
-        #FIX: AI removed str(secret) coercion on even attempts that silently flipped Too High/Too Low via string comparison.
+        # FIX: removed str(secret) coercion that silently flipped hints via
+        # lexicographic comparison on every even-numbered attempt.
         outcome, hint_message = check_guess(guess_int, st.session_state.secret)
 
         if show_hint:

@@ -1,0 +1,32 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/rikaraxkz/Desktop/CodePath/AI110/AI110-GAMEGLITCH
+plugins: anyio-4.13.0
+collecting ... collected 23 items
+
+tests/test_game_logic.py::test_bug1_normal_range_is_1_to_50 PASSED       [  4%]
+tests/test_game_logic.py::test_bug1_hard_range_is_1_to_100 PASSED        [  8%]
+tests/test_game_logic.py::test_bug1_easy_range_unchanged PASSED          [ 13%]
+tests/test_game_logic.py::test_bug1_normal_and_hard_ranges_are_not_equal PASSED [ 17%]
+tests/test_game_logic.py::test_bug2_easy_upper_bound_is_not_hardcoded_100 PASSED [ 21%]
+tests/test_game_logic.py::test_bug2_normal_upper_bound_is_not_hardcoded_100 PASSED [ 26%]
+tests/test_game_logic.py::test_bug2_each_difficulty_produces_distinct_upper_bound PASSED [ 30%]
+tests/test_game_logic.py::test_bug3_too_high_hint_says_go_lower PASSED   [ 34%]
+tests/test_game_logic.py::test_bug3_too_low_hint_says_go_higher PASSED   [ 39%]
+tests/test_game_logic.py::test_bug3_win_hint_is_correct PASSED           [ 43%]
+tests/test_game_logic.py::test_bug3_hints_are_not_swapped PASSED         [ 47%]
+tests/test_game_logic.py::test_bug4_string_secret_raises_type_error PASSED [ 52%]
+tests/test_game_logic.py::test_bug4_integer_comparison_not_swapped_on_even_like_inputs PASSED [ 56%]
+tests/test_game_logic.py::test_bug8_first_guess_win_scores_90 PASSED     [ 60%]
+tests/test_game_logic.py::test_bug8_second_guess_win_scores_80 PASSED    [ 65%]
+tests/test_game_logic.py::test_bug8_ninth_guess_win_scores_minimum_10 PASSED [ 69%]
+tests/test_game_logic.py::test_bug8_win_score_does_not_go_below_10 PASSED [ 73%]
+tests/test_game_logic.py::test_bug9_zero_attempt_raises_value_error PASSED [ 78%]
+tests/test_game_logic.py::test_bug9_negative_attempt_raises_value_error PASSED [ 82%]
+tests/test_game_logic.py::test_bug9_error_message_includes_bad_value PASSED [ 86%]
+tests/test_game_logic.py::test_winning_guess PASSED                      [ 91%]
+tests/test_game_logic.py::test_guess_too_high PASSED                     [ 95%]
+tests/test_game_logic.py::test_guess_too_low PASSED                      [100%]
+
+============================== 23 passed in 0.03s ==============================

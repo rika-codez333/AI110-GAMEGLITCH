@@ -1,14 +1,16 @@
 def get_range_for_difficulty(difficulty: str):
-    """Return (low, high) inclusive number range for the given difficulty level."""
+    """Return (low, high) inclusive range for the given difficulty."""
 
     if difficulty == "Easy":
         return 1, 20
 
     if difficulty == "Normal":
-        return 1, 50  # I caught swapped ranges: Normal was (1, 100), Hard was (1, 50) -- corrected using Claude code. 
+        # FIX: was (1, 100) — Normal and Hard ranges were swapped.
+        return 1, 50
 
     if difficulty == "Hard":
-        return 1, 100  # I corrected Hard to (1, 100); was (1, 50) -- corrected using Claude code.
+        # FIX: was (1, 50) — corrected Hard to the wider range.
+        return 1, 100
 
     return 1, 100
 
@@ -52,9 +54,11 @@ def check_guess(guess, secret):
         return "Win", "🎉 Correct!"
 
     if guess > secret:
-        return "Too High", "📉 Go LOWER!"  # fixed reversed hint: was "Go HIGHER!" when guess was already too high -- corrected using Claude code.
+        # FIX: was "Go HIGHER!" — reversed hint when guess was too high.
+        return "Too High", "📉 Go LOWER!"
 
-    return "Too Low", "📈 Go HIGHER!"  # fixed reversed hint: was "Go LOWER!" when guess was too low.
+    # FIX: was "Go LOWER!" — reversed hint when guess was too low.
+    return "Too Low", "📈 Go HIGHER!"
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
@@ -64,19 +68,24 @@ def update_score(current_score: int, outcome: str, attempt_number: int):
     attempt_number is 1-indexed (first guess = 1, second = 2, ...).
     Win scoring:   start at 100 points, subtract 10 per attempt already used.
                    Minimum win award is always 10 points.
-    Wrong guesses: Too High on an even attempt awards 5 pts (lucky direction bonus).
+    Wrong guesses: Too High on an even attempt awards 5 pts (direction bonus).
                    All other wrong guesses deduct 5 pts.
     """
 
     if attempt_number < 1:
-        raise ValueError(f"attempt_number must be >= 1, got {attempt_number}")  #FIX: AI added guard; 0 or negative silently awarded inflated points.
+        # FIX: guard added; 0 or negative silently awarded inflated points.
+        raise ValueError(
+            f"attempt_number must be >= 1, got {attempt_number}"
+        )
 
     if outcome == "Win":
-        points_awarded = max(100 - 10 * attempt_number, 10)  #FIX: AI removed extra +1 off-by-one; first-guess win was scoring 80 instead of 90. Manually verified: debug panel confirmed secret, first-guess win showed score of 90.
+        # FIX: removed +1 off-by-one; first-guess win was scoring 80 not 90.
+        points_awarded = max(100 - 10 * attempt_number, 10)
         return current_score + points_awarded
 
     if outcome == "Too High":
-        return current_score + 5 if attempt_number % 2 == 0 else current_score - 5  #FIX: Manually verified even-attempt Too High awards +5; initial test hit an odd attempt causing false failure. Logic confirmed correct.
+        bonus = attempt_number % 2 == 0
+        return current_score + 5 if bonus else current_score - 5
 
     if outcome == "Too Low":
         return current_score - 5
